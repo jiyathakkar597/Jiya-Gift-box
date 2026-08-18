@@ -1,1584 +1,247 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A Little Box of Goodies — Build a Digital Gift Box</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --cream:#FAF7EF;
-    --card:#FFFFFF;
-    --ink:#28201F;
-    --muted:#948A87;
-    --pink:#E2427A;
-    --pink-dark:#c72f65;
-    --gold:#E8A33D;
-    --line:#ECE3DC;
-    --line-strong:#E4D6DD;
-    --ring: rgba(226,66,122,0.18);
-    --shadow: 0 8px 24px -8px rgba(40,32,31,0.10);
-    --shadow-lg: 0 24px 60px -16px rgba(40,32,31,0.28);
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--cream);
-    color:var(--ink);
-    font-family:'Inter',sans-serif;
-    min-height:100vh;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:1080px;margin:0 auto;padding:40px 24px 100px;}
+// ---------------- SONG ----------------
+function modalSong(g, existing){
+  const ed = existing ? existing.data : {};
 
-  /* ---- header ---- */
-  .badge{
-    display:flex;align-items:center;justify-content:center;gap:7px;
-    width:max-content;margin:0 auto 22px;background:var(--card);
-    border-radius:999px;padding:9px 20px;font-size:13.5px;font-weight:600;
-    box-shadow:var(--shadow);color:var(--ink);
-  }
-  h1{
-    font-family:'Caveat',cursive;font-weight:700;
-    font-size:clamp(2.6rem,7vw,4.2rem);
-    line-height:1;margin:0 0 12px;text-align:center;
-  }
-  h1 .heart{color:var(--pink);}
-  .sub{
-    text-align:center;color:var(--muted);font-size:16px;
-    max-width:44ch;margin:0 auto 34px;line-height:1.5;
-  }
-
-  /* ---- for/from card ---- */
-  .tag-card{
-    background:var(--card);border-radius:22px;padding:26px 30px;
-    box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 1fr;
-    gap:30px;margin-bottom:36px;
-  }
-  @media (max-width:560px){ .tag-card{grid-template-columns:1fr;gap:18px;} }
-  .tag-field label{
-    display:block;font-size:11.5px;font-weight:700;letter-spacing:.08em;
-    text-transform:uppercase;color:var(--muted);margin-bottom:10px;
-  }
-  .tag-field input{
-    width:100%;border:none;border-bottom:1.5px solid var(--line-strong);
-    background:transparent;padding:6px 2px 10px;font-size:16px;color:var(--ink);
-    font-family:'Inter',sans-serif;
-  }
-  .tag-field input::placeholder{color:#c9bcc2;font-style:italic;}
-  .tag-field input:focus{outline:none;border-bottom-color:var(--pink);}
-
-  /* ---- goodie grid ---- */
-  .grid{
-    display:grid;grid-template-columns:repeat(5,1fr);gap:16px;
-  }
-  @media (max-width:920px){ .grid{grid-template-columns:repeat(3,1fr);} }
-  @media (max-width:620px){ .grid{grid-template-columns:repeat(2,1fr);} }
-  .goodie-card{
-    background:var(--card);border-radius:20px;padding:22px 18px 20px;
-    position:relative;box-shadow:var(--shadow);cursor:pointer;
-    display:flex;flex-direction:column;gap:12px;text-align:left;
-    transition:transform .16s ease, box-shadow .16s ease;
-  }
-  .goodie-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
-  .goodie-card:focus-visible{outline:2.5px solid var(--pink);outline-offset:2px;}
-  .add-pill{
-    position:absolute;top:14px;right:14px;background:var(--cream);
-    border-radius:999px;padding:5px 12px;font-size:11px;font-weight:700;
-    letter-spacing:.04em;color:var(--ink);
-  }
-  .add-pill.has-items{background:var(--pink);color:#fff;}
-  .goodie-icon{font-size:38px;line-height:1;}
-  .goodie-name{font-weight:700;font-size:16px;}
-  .goodie-desc{font-size:13px;color:var(--muted);line-height:1.4;}
-
-  /* ---- added items ---- */
-  .added-wrap{margin-top:36px;}
-  .added-title{font-family:'Caveat',cursive;font-size:1.7rem;font-weight:700;margin:0 0 4px;}
-  .added-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
-  .added-item{
-    background:var(--card);border-radius:16px;padding:14px 16px;
-    display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);
-  }
-  .added-item .ai-emoji{font-size:22px;}
-  .added-item .ai-body{flex:1;min-width:0;}
-  .added-item .ai-type{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;}
-  .added-item .ai-preview{font-size:14px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .icon-btn{
-    background:transparent;border:none;cursor:pointer;color:var(--muted);
-    width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;
-    font-size:16px;transition:background .15s, color .15s;flex-shrink:0;
-  }
-  .icon-btn:hover{background:#F7E9EF;color:var(--pink-dark);}
-
-  /* ---- continue ---- */
-  .continue-row{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:40px;}
-  .continue-btn{
-    background:var(--pink);color:#fff;border:none;border-radius:999px;
-    padding:15px 44px;font-size:16px;font-weight:700;cursor:pointer;
-    box-shadow:0 12px 26px -10px rgba(226,66,122,0.55);
-    transition:transform .15s ease, background .15s ease;font-family:'Inter',sans-serif;
-    display:flex;align-items:center;gap:8px;
-  }
-  .continue-btn:hover:not(:disabled){transform:translateY(-2px);background:var(--pink-dark);}
-  .continue-btn:disabled{background:#ECD9E0;color:#c3a9b3;cursor:not-allowed;box-shadow:none;}
-  .continue-hint{font-size:13px;color:var(--muted);}
-  .autosave-note{
-    text-align:center;font-size:12.5px;color:var(--muted);margin-top:30px;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-  }
-  .autosave-dot{width:6px;height:6px;border-radius:50%;background:#3fb56f;display:inline-block;}
-
-  /* ---- modal ---- */
-  .modal-overlay{
-    position:fixed;inset:0;background:rgba(40,32,31,0.5);backdrop-filter:blur(2px);
-    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
-  }
-  .modal-overlay.open{display:flex;}
-  .modal{
-    background:var(--cream);width:100%;max-width:760px;border-radius:26px;
-    padding:30px 32px 28px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);
-    animation:pop .18s cubic-bezier(.2,.8,.3,1);
-  }
-  @keyframes pop{from{transform:scale(.97);opacity:0;}to{transform:scale(1);opacity:1;}}
-  .modal-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;position:relative;}
-  .modal-emoji{font-size:30px;}
-  .modal-title{font-size:1.5rem;font-weight:700;flex:1;line-height:1.1;}
-  .modal-desc{font-size:13.5px;color:var(--muted);margin-top:2px;font-weight:400;}
-  .modal-close{
-    background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;
-    padding:4px;position:absolute;top:-4px;right:-4px;
-  }
-  .modal-cols{display:grid;grid-template-columns:1.15fr 1fr;gap:30px;align-items:start;}
-  @media (max-width:640px){ .modal-cols{grid-template-columns:1fr;} }
-  .field{margin-bottom:18px;}
-  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-  .field label{display:block;font-size:13.5px;font-weight:700;margin-bottom:8px;color:var(--ink);}
-  .field .opt{font-weight:400;color:var(--muted);}
-  .field input[type=text], .field input[type=date], .field input[type=number], .field textarea{
-    width:100%;border:1.5px solid var(--line-strong);background:var(--card);
-    border-radius:12px;padding:11px 13px;font-size:14.5px;color:var(--ink);
-    font-family:'Inter',sans-serif;resize:vertical;
-  }
-  .field input:focus, .field textarea:focus{
-    outline:none;border-color:var(--pink);box-shadow:0 0 0 4px var(--ring);
-  }
-  .field input.filled, .field textarea.filled{border-color:var(--pink);}
-  .helper-text{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4;}
-
-  .file-drop{
-    border:1.5px dashed #D9C8C0;border-radius:12px;padding:18px;text-align:center;
-    cursor:pointer;color:var(--muted);font-size:13.5px;background:var(--card);
-    display:block;
-  }
-  .file-drop input{display:none;}
-
-  .pill-row{display:flex;flex-wrap:wrap;gap:8px;}
-  .pill{
-    border:1.5px solid var(--line-strong);background:var(--card);color:var(--ink);
-    border-radius:999px;padding:7px 15px;font-size:13px;cursor:pointer;
-    font-family:'Inter',sans-serif;transition:all .15s;
-  }
-  .pill:hover{border-color:var(--pink);}
-  .pill.active{background:var(--ink);border-color:var(--ink);color:#fff;}
-
-  .swatch-row{display:flex;gap:10px;flex-wrap:wrap;}
-  .swatch{
-    width:26px;height:26px;border-radius:50%;cursor:pointer;
-    border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line-strong);
-  }
-  .swatch.active{box-shadow:0 0 0 2.5px var(--ink);}
-
-  .emoji-grid{display:flex;flex-wrap:wrap;gap:6px;}
-  .emoji-opt{
-    font-size:20px;background:var(--card);border:1.5px solid var(--line);
-    border-radius:10px;width:38px;height:38px;display:flex;align-items:center;
-    justify-content:center;cursor:pointer;
-  }
-  .emoji-opt.active{border-color:var(--pink);background:#FDF0F5;}
-
-  .preview-label{font-size:13.5px;font-weight:700;margin-bottom:10px;}
-  .preview-card{
-    background:var(--card);border-radius:16px;padding:18px;min-height:120px;
-    box-shadow:var(--shadow);
-  }
-  .preview-placeholder-box{
-    background:#F1EBE6;border-radius:12px;height:150px;display:flex;
-    align-items:center;justify-content:center;color:#B4A9A3;font-size:13.5px;overflow:hidden;
-  }
-  .preview-placeholder-box img, .preview-placeholder-box video{width:100%;height:100%;object-fit:cover;}
-  .preview-title{font-weight:700;font-size:15px;}
-  .preview-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
-  .preview-icon-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-  .preview-icon-box{
-    width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
-    justify-content:center;font-size:20px;flex-shrink:0;
-  }
-
-  .modal-actions{display:flex;gap:10px;margin-top:26px;justify-content:flex-end;}
-  .btn-secondary, .btn-primary{
-    border-radius:999px;padding:11px 24px;font-size:14px;font-weight:700;cursor:pointer;
-    font-family:'Inter',sans-serif;border:none;
-  }
-  .btn-secondary{background:transparent;color:var(--ink);}
-  .btn-secondary:hover{text-decoration:underline;}
-  .btn-primary{background:var(--pink);color:#fff;display:flex;align-items:center;gap:7px;}
-  .btn-primary:hover:not(:disabled){background:var(--pink-dark);}
-  .btn-primary:disabled{background:#ECD9E0;color:#c3a9b3;cursor:not-allowed;}
-
-  /* drawing */
-  .draw-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
-  .draw-color{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--line-strong);padding:0;cursor:pointer;}
-  .draw-slider{width:110px;}
-  canvas#drawpad{
-    width:100%;height:200px;border-radius:12px;border:1.5px solid var(--line-strong);
-    background:#fff;touch-action:none;cursor:crosshair;display:block;
-  }
-  /* voice */
-  .rec-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
-  .rec-btn{
-    background:var(--gold);color:#fff;border:none;border-radius:999px;
-    padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;display:flex;
-    align-items:center;gap:8px;
-  }
-  .rec-btn.recording{background:#d33a3a;}
-  .rec-link{background:none;border:none;color:var(--muted);font-size:13.5px;cursor:pointer;display:flex;align-items:center;gap:6px;}
-  .rec-link:hover{color:var(--ink);}
-
-  .toast{
-    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;font-size:14px;
-    opacity:0;pointer-events:none;transition:all .25s ease;z-index:200;
-  }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  @media (prefers-reduced-motion: reduce){ *{animation:none !important;transition:none !important;} }
-
-  /* ---- review view ---- */
-  .review-list{display:flex;flex-direction:column;gap:16px;margin-bottom:10px;}
-  .review-item{background:var(--card);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;}
-  .review-item-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);}
-  .reorder-btns{display:flex;flex-direction:column;gap:0px;}
-  .reorder-btns button{background:none;border:none;cursor:pointer;color:var(--ink);font-size:11px;padding:1px 4px;line-height:1;}
-  .reorder-btns button:disabled{opacity:.25;cursor:default;}
-  .review-item-head .ri-emoji{font-size:20px;}
-  .review-item-head .ri-name{font-weight:700;font-size:15px;flex:1;}
-  .review-item-body{padding:20px;}
-  .ri-content-note{border-radius:14px;padding:24px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;}
-  .ri-content-photo img{width:100%;border-radius:14px;display:block;}
-  .ri-content-drawing img{width:100%;border-radius:14px;display:block;border:1px solid var(--line);}
-  .ri-empty{color:var(--muted);font-size:13.5px;text-align:center;padding:20px;}
-
-  /* ---- share view ---- */
-  .success-pill{
-    width:max-content;margin:0 auto;background:#DDF3E4;color:#1f7a43;font-weight:700;
-    font-size:14px;padding:9px 18px;border-radius:999px;
-  }
-
-  /* ---- reveal view ---- */
-  .reveal-label{font-family:'Caveat',cursive;font-size:1.2rem;color:var(--muted);margin-top:18px;}
-  .reveal-for{font-family:'Caveat',cursive;font-weight:700;font-size:2.4rem;color:var(--ink);line-height:1;}
-  .reveal-from{font-family:'Caveat',cursive;font-weight:700;font-size:1.6rem;color:var(--pink);line-height:1;}
-  .pull-label{font-family:'Caveat',cursive;font-size:1.1rem;color:var(--muted);margin-top:34px;line-height:1.3;}
-  .giftbox-scene{
-    position:relative;width:220px;height:220px;margin:14px auto 6px;cursor:grab;
-    transition:transform .4s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;
-  }
-  .giftbox-scene.unwrapping{transform:scale(1.15) translateY(-30px);opacity:0;}
-  .gb-body{
-    position:absolute;left:16px;right:16px;bottom:10px;top:70px;border-radius:18px;
-    background:linear-gradient(135deg,#ef6fa8,#d63a7d);
-    box-shadow:0 20px 40px -14px rgba(214,58,125,0.5);
-  }
-  .gb-body::after{
-    content:"";position:absolute;left:50%;top:0;bottom:0;width:16px;transform:translateX(-50%);
-    background:var(--gold);
-  }
-  .gb-lid{
-    position:absolute;left:6px;right:6px;top:44px;height:38px;border-radius:14px;
-    background:linear-gradient(135deg,#e2427a,#b8285f);
-    box-shadow:0 10px 20px -8px rgba(184,40,95,0.5);
-  }
-  .gb-lid::after{
-    content:"";position:absolute;left:50%;top:0;bottom:0;width:16px;transform:translateX(-50%);
-    background:var(--gold);
-  }
-  .gb-bow{
-    position:absolute;left:50%;top:2px;transform:translateX(-50%);font-size:44px;
-    filter:drop-shadow(0 6px 10px rgba(0,0,0,0.15));
-  }
-  .carousel-counter{color:var(--muted);font-size:13px;font-weight:700;margin-bottom:14px;}
-  .carousel-card{
-    background:var(--card);border-radius:20px;box-shadow:var(--shadow-lg);
-    padding:26px;min-height:220px;text-align:left;margin-bottom:20px;
-  }
-  .carousel-nav{display:flex;justify-content:center;gap:12px;}
-
-  /* ---- fx: hearts + confetti ---- */
-  .fx-heart{
-    position:fixed;pointer-events:none;z-index:300;left:0;top:0;
-    animation-name:heartFloat;animation-timing-function:ease-out;animation-fill-mode:forwards;
-    will-change:transform,opacity;
-  }
-  @keyframes heartFloat{
-    0%{ transform:translate(0,0) scale(0.5) rotate(0deg); opacity:1; }
-    70%{ opacity:1; }
-    100%{ transform:translate(var(--dx),-260px) scale(1.15) rotate(var(--rot,0deg)); opacity:0; }
-  }
-  .fx-confetti{
-    position:fixed;top:-24px;pointer-events:none;z-index:300;border-radius:2px;left:0;
-    animation-name:confettiFall;animation-timing-function:cubic-bezier(.2,.6,.4,1);animation-fill-mode:forwards;
-    will-change:transform,opacity;
-  }
-  @keyframes confettiFall{
-    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
-    85%{ opacity:1; }
-    100%{ transform:translateY(100vh) rotate(var(--rot)); opacity:0; }
-  }
-</style>
-</head>
-<body>
-
-<!-- ============ BUILD VIEW ============ -->
-<div class="wrap" id="buildView">
-  <div class="badge">✦ A Little Box of Goodies</div>
-  <h1>Build a Gift Box <span class="heart">❤</span></h1>
-  <p class="sub">Craft a heartfelt digital surprise — one goodie at a time.</p>
-
-  <div class="tag-card">
-    <div class="tag-field">
-      <label for="forInput">For</label>
-      <input id="forInput" type="text" placeholder="Recipient's name">
-    </div>
-    <div class="tag-field">
-      <label for="fromInput">From</label>
-      <input id="fromInput" type="text" placeholder="Your name">
-    </div>
-  </div>
-
-  <div class="grid" id="goodieGrid"></div>
-
-  <div class="added-wrap" id="addedSection" style="display:none;">
-    <div class="added-title">In the box</div>
-    <div class="added-list" id="addedList"></div>
-  </div>
-
-  <div class="continue-row">
-    <button class="continue-btn" id="continueBtn" disabled>Continue →</button>
-    <div class="continue-hint" id="continueHint">Add at least one goodie to continue.</div>
-  </div>
-
-  <div class="autosave-note"><span class="autosave-dot"></span> Made with love — your drafts are auto-saved to this device.</div>
-</div>
-
-<!-- ============ REVIEW VIEW ============ -->
-<div class="wrap" id="reviewView" style="display:none;">
-  <h1 style="font-size:clamp(2rem,5vw,2.6rem);">Your Gift Box</h1>
-  <p class="sub">Review, edit and reorder before you send.</p>
-
-  <div class="review-list" id="reviewList"></div>
-
-  <div class="continue-row">
-    <button class="continue-btn" id="wrapUpBtn">Wrap up &amp; share <span style="font-size:15px;">🔗</span></button>
-    <div class="continue-hint">We'll give you a magical link you can send.</div>
-    <button class="btn-secondary" id="backToBuildBtn" style="margin-top:6px;">← Back to editing</button>
-  </div>
-</div>
-
-<!-- ============ SHARE VIEW ============ -->
-<div class="wrap" id="shareView" style="display:none;">
-  <div class="badge">✦ A Little Box of Goodies</div>
-  <h1>Build a Gift Box <span class="heart">❤</span></h1>
-  <p class="sub">Craft a heartfelt digital surprise — one goodie at a time.</p>
-
-  <div class="success-pill">🎉 Your gift box is ready!</div>
-  <h1 style="margin-top:18px;">All wrapped up <span class="heart">♡</span></h1>
-  <p class="sub" id="shareSub">Send this link. They'll open every goodie, one by one.</p>
-
-  <div class="tag-card" style="display:block;">
-    <label style="font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Share Link</label>
-    <div style="display:flex;gap:10px;margin-top:10px;">
-      <input type="text" id="shareLinkInput" readonly style="flex:1;border:1.5px solid var(--line-strong);border-radius:12px;padding:11px 14px;font-size:14px;color:var(--ink);background:var(--cream);">
-      <button class="btn-primary" id="copyLinkBtn" style="white-space:nowrap;">⧉ Copy</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px;margin-top:16px;">
-      <button class="pill" id="previewRevealBtn">Preview reveal →</button>
-      <button class="btn-secondary" id="startAnotherBtn">Start another box</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============ REVEAL VIEW ============ -->
-<div class="wrap" id="revealView" style="display:none;text-align:center;">
-  <div class="badge">✦ A little box of goodies</div>
-
-  <div id="revealIntro">
-    <div class="reveal-label">For</div>
-    <div class="reveal-for" id="revealFor">—</div>
-    <div class="reveal-label">From</div>
-    <div class="reveal-from" id="revealFrom">—</div>
-
-    <div class="pull-label">Pull to unwrap <span style="display:block;">↑</span></div>
-    <div class="giftbox-scene" id="giftboxScene">
-      <div class="gb-bow">🎀</div>
-      <div class="gb-lid"></div>
-      <div class="gb-body"></div>
-    </div>
-    <button class="continue-btn" id="unwrapBtn" style="margin-top:10px;">✋ Tap or pull the bow</button>
-    <div class="continue-hint" id="goodieCountHint">0 goodies inside</div>
-  </div>
-
-  <div id="revealCarousel" style="display:none;">
-    <div class="carousel-counter" id="carouselCounter">1 / 1</div>
-    <div class="carousel-card" id="carouselCard"></div>
-    <div class="carousel-nav">
-      <button class="btn-secondary" id="prevGoodieBtn">← Back</button>
-      <button class="btn-primary" id="nextGoodieBtn">Next →</button>
-    </div>
-  </div>
-
-  <div id="revealDone" style="display:none;">
-    <h1>That's everything <span class="heart">❤</span></h1>
-    <p class="sub">Made with love, just for you.</p>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modalBody"></div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-(function(){
-  const GOODIES = [
-    {id:'note', emoji:'📝', name:'Note', desc:'A heartfelt handwritten message.'},
-    {id:'photo', emoji:'📷', name:'Photo', desc:'A framed memory in a picture.'},
-    {id:'song', emoji:'🎵', name:'Song', desc:'A tune that says everything.'},
-    {id:'video', emoji:'🎥', name:'Video', desc:'A short clip they will love.'},
-    {id:'gift', emoji:'🎁', name:'Gift', desc:'A little something to unwrap.'},
-    {id:'voice', emoji:'🎤', name:'Voice', desc:'A whisper of your voice.'},
-    {id:'drawing', emoji:'🎨', name:'Drawing', desc:'A doodle straight from the heart.'},
-    {id:'location', emoji:'📍', name:'Location', desc:'A place worth remembering.'},
-    {id:'coupon', emoji:'🎟', name:'Coupon', desc:'A promise to redeem later.'},
-    {id:'memory', emoji:'📰', name:'Memory', desc:'A story from your timeline.'},
-  ];
-  const NOTE_BG = ['#FBF3E7','#FBE4EA','#E3F0FB','#E5F5EA','#EFE7FB','#FBF6DC','#FBE8DE'];
-  const THEME_GRAD = {
-    Rose:['#E2427A','#C72F65'], Amber:['#E8A33D','#C9821F'], Emerald:['#3fb56f','#2c8f56'],
-    Violet:['#8B5CF6','#6d3fce'], Sky:['#3f9fd9','#2a78ad'], Stone:['#8B7E82','#6b6063']
-  };
-  const COUPON_ICONS = ['🎟','☕','🥤','🍩','🍕','🍷','🎳','🐱','💋','😊','🍸','🎮','🚗','🛁','🎬','🎂'];
-  const COUPON_QUICK = ['Breakfast Date','Movie Night','1 Free Hug','Massage','Late Night Drive','Coffee Together','One Kiss','Game Night','Picnic Date'];
-
-  const STORAGE_KEY = 'giftbox_draft_v2';
-  let state = {for:'', from:'', items: []};
-  function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
-  function load(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); }catch(e){} }
-  load();
-
-  const forInput = document.getElementById('forInput');
-  const fromInput = document.getElementById('fromInput');
-  const goodieGrid = document.getElementById('goodieGrid');
-  const addedSection = document.getElementById('addedSection');
-  const addedList = document.getElementById('addedList');
-  const continueBtn = document.getElementById('continueBtn');
-  const continueHint = document.getElementById('continueHint');
-  const modalOverlay = document.getElementById('modalOverlay');
-  const modalBody = document.getElementById('modalBody');
-  const toastEl = document.getElementById('toast');
-
-  forInput.value = state.for || '';
-  fromInput.value = state.from || '';
-  forInput.addEventListener('input', e=>{state.for = e.target.value; save();});
-  fromInput.addEventListener('input', e=>{state.from = e.target.value; save();});
-
-  function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastEl._t);
-    toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 1800);
-  }
-  function esc(str){ const d=document.createElement('div'); d.textContent = str||''; return d.innerHTML; }
-
-  // ---- celebratory effects ----
-  function throwHearts(originEl){
-    const rect = originEl.getBoundingClientRect();
-    const hearts = ['❤️','💖','💕','💗','💓','💛'];
-    const count = 22;
-    for(let i=0;i<count;i++){
-      const el = document.createElement('div');
-      el.className = 'fx-heart';
-      el.textContent = hearts[Math.floor(Math.random()*hearts.length)];
-      const startX = rect.left + rect.width/2 + (Math.random()*70-35);
-      const startY = rect.top + rect.height*0.4;
-      el.style.left = startX+'px';
-      el.style.top = startY+'px';
-      el.style.fontSize = (16+Math.random()*20)+'px';
-      const dx = (Math.random()*220-110)+'px';
-      const rot = (Math.random()*60-30)+'deg';
-      el.style.setProperty('--dx', dx);
-      el.style.setProperty('--rot', rot);
-      el.style.animationDuration = (1.0 + Math.random()*0.9)+'s';
-      el.style.animationDelay = (Math.random()*0.25)+'s';
-      document.body.appendChild(el);
-      el.addEventListener('animationend', ()=> el.remove());
-    }
-  }
-  function throwConfetti(){
-    const colors = ['#E2427A','#E8A33D','#3fb56f','#3f9fd9','#8B5CF6','#f4c542'];
-    const count = 70;
-    for(let i=0;i<count;i++){
-      const el = document.createElement('div');
-      el.className = 'fx-confetti';
-      el.style.left = (Math.random()*100)+'vw';
-      el.style.background = colors[Math.floor(Math.random()*colors.length)];
-      el.style.width = el.style.height = (6+Math.random()*7)+'px';
-      if(Math.random()>0.5) el.style.borderRadius = '50%';
-      el.style.setProperty('--rot', (Math.random()*520)+'deg');
-      el.style.animationDuration = (1.7 + Math.random()*1.3)+'s';
-      el.style.animationDelay = (Math.random()*0.35)+'s';
-      document.body.appendChild(el);
-      el.addEventListener('animationend', ()=> el.remove());
-    }
-  }
-
-  function renderGrid(){
-    goodieGrid.innerHTML = '';
-    GOODIES.forEach(g=>{
-      const count = state.items.filter(i=>i.type===g.id).length;
-      const card = document.createElement('button');
-      card.className = 'goodie-card';
-      card.innerHTML = `
-        <span class="add-pill ${count>0?'has-items':''}">${count>0 ? '+ ' + count : '+ ADD'}</span>
-        <span class="goodie-icon">${g.emoji}</span>
-        <span class="goodie-name">${g.name}</span>
-        <span class="goodie-desc">${g.desc}</span>
-      `;
-      card.addEventListener('click', ()=>openModal(g.id));
-      goodieGrid.appendChild(card);
-    });
-  }
-
-  function renderAdded(){
-    addedList.innerHTML = '';
-    const n = state.items.length;
-    addedSection.style.display = n === 0 ? 'none' : 'block';
-    continueBtn.disabled = n === 0;
-    continueHint.textContent = n === 0 ? 'Add at least one goodie to continue.' : `${n} ${n===1?'goodie':'goodies'} ready to send.`;
-    state.items.forEach(item=>{
-      const g = GOODIES.find(x=>x.id===item.type);
-      const row = document.createElement('div');
-      row.className = 'added-item';
-      row.innerHTML = `
-        <span class="ai-emoji">${g.emoji}</span>
-        <div class="ai-body">
-          <div class="ai-type">${g.name}</div>
-          <div class="ai-preview">${esc(item.preview || g.desc)}</div>
+  shell(g, `
+    <div class="modal-cols">
+      <div>
+        <div class="field">
+          <label>Song Title</label>
+          <input type="text" id="f_title" placeholder="Our song">
         </div>
-        <button class="icon-btn" title="Remove" aria-label="Remove ${g.name}">✕</button>
-      `;
-      row.querySelector('.icon-btn').addEventListener('click', ()=>{
-        state.items = state.items.filter(x=>x.id!==item.id);
-        save(); renderAll();
-        toast(`${g.name} removed`);
-      });
-      addedList.appendChild(row);
-    });
-  }
-  function renderAll(){ renderGrid(); renderAdded(); }
 
-  function commitItem(type, data, preview, editId){
-    if(editId){
-      const idx = state.items.findIndex(x=>x.id===editId);
-      if(idx>-1) state.items[idx] = {...state.items[idx], data, preview};
-    } else {
-      state.items.push({id:'g'+Date.now()+Math.random().toString(36).slice(2,7), type, data, preview});
-    }
-    save();
-    renderAll();
-    if(document.getElementById('reviewView').style.display !== 'none') renderReviewList();
-    closeModal();
-    toast(editId ? 'Goodie updated ✓' : 'Added to your box 🎁');
-  }
-
-  // Renders the actual content of an item (used in Review list and Reveal carousel)
-  function renderItemContent(item){
-    const d = item.data || {};
-    switch(item.type){
-      case 'note': {
-        const fam = d.font==='Handwritten' ? "'Caveat',cursive" : "'Quicksand',sans-serif";
-        return `<div class="ri-content-note" style="background:${d.bg||'#FBF3E7'};font-family:${fam};font-size:20px;">${d.emoji?d.emoji+' ':''}${esc(d.msg||'')}</div>`;
-      }
-      case 'photo':
-        return d.dataUrl
-          ? `<div class="ri-content-photo"><img src="${d.dataUrl}"></div>${d.caption?`<div class="preview-sub" style="margin-top:8px;text-align:center;">${esc(d.caption)}</div>`:''}`
-          : `<div class="ri-empty">No photo uploaded</div>`;
-      case 'song':
-        return `<div class="preview-icon-row"><div class="preview-icon-box" style="background:linear-gradient(135deg,#e0559c,#8b5cf6);color:#fff;">🎵</div>
-          <div><div class="preview-title">${esc(d.title||'Untitled song')}</div>${d.artist?`<div class="preview-sub">${esc(d.artist)}</div>`:''}</div></div>
-          ${d.msg?`<div class="preview-sub" style="margin-top:10px;">${esc(d.msg)}</div>`:''}`;
-      case 'video':
-        return `<div class="preview-placeholder-box" style="background:#1a1414;color:#fff;font-size:34px;">▶</div>
-          ${d.caption?`<div class="preview-sub" style="margin-top:8px;">${esc(d.caption)}</div>`:''}`;
-      case 'gift':
-        return `<div class="preview-icon-row"><div class="preview-icon-box" style="background:#dff3e6;">🎁</div>
-          <div><div class="preview-title">${esc(d.title||'A little gift')}</div>${d.price?`<div class="preview-sub">${esc(d.price)}</div>`:''}</div></div>
-          ${d.desc?`<div class="preview-sub" style="margin-top:10px;">${esc(d.desc)}</div>`:''}`;
-      case 'voice':
-        return d.dataUrl ? `<audio controls src="${d.dataUrl}" style="width:100%;"></audio>` : `<div class="ri-empty">No audio recorded.</div>`;
-      case 'drawing':
-        return d.dataUrl ? `<div class="ri-content-drawing"><img src="${d.dataUrl}"></div>` : `<div class="ri-empty">No drawing saved</div>`;
-      case 'location':
-        return `<div style="font-weight:700;font-size:15px;margin-bottom:8px;">📍 ${esc(d.place||'Somewhere special')}</div>
-          <div class="preview-placeholder-box" style="background:#E4F5FB;height:100px;"></div>
-          ${d.note?`<div class="preview-sub" style="margin-top:8px;">${esc(d.note)}</div>`:''}`;
-      case 'coupon': {
-        const grad = THEME_GRAD[d.theme||'Rose'];
-        return `<div style="background:linear-gradient(135deg,${grad[0]},${grad[1]});color:#fff;border-radius:16px;padding:18px;">
-          <div style="font-size:12px;font-weight:700;letter-spacing:.08em;opacity:.9;">${d.icon||'🎟'} COUPON</div>
-          <div style="font-family:'Caveat',cursive;font-size:1.7rem;font-weight:700;margin-top:6px;">${esc(d.title||'Untitled Coupon')}</div>
-          <div style="border-top:1.5px dashed rgba(255,255,255,0.5);margin:12px 0;"></div>
-          <div style="font-size:13.5px;opacity:.95;">${esc(d.desc||'A little something just for you.')}</div>
-          <div style="display:flex;justify-content:flex-end;margin-top:16px;"><span style="background:rgba(255,255,255,0.25);padding:8px 18px;border-radius:999px;font-size:13px;font-weight:700;">🎟 Redeem</span></div>
-        </div>`;
-      }
-      case 'memory':
-        return `<div style="border-left:4px solid var(--gold);padding-left:14px;">
-          <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-bottom:6px;">📅 ${d.date||'—'}</div>
-          <div class="preview-title">${esc(d.title||'A memory')}</div>
-          ${d.desc?`<div class="preview-sub" style="margin-top:8px;">${esc(d.desc)}</div>`:''}
-          ${d.loc?`<div class="preview-sub" style="margin-top:4px;">📍 ${esc(d.loc)}</div>`:''}
-        </div>`;
-      default: return '';
-    }
-  }
-
-  function closeModal(){
-    modalOverlay.classList.remove('open');
-    modalBody.innerHTML='';
-    stopRecording(true);
-  }
-  modalOverlay.addEventListener('click', e=>{ if(e.target===modalOverlay) closeModal(); });
-
-  function shell(g, bodyHtml){
-    modalBody.innerHTML = `
-      <div class="modal-head">
-        <span class="modal-emoji">${g.emoji}</span>
-        <div>
-          <div class="modal-title">${g.name}</div>
-          <div class="modal-desc">${g.desc}</div>
+        <div class="field">
+          <label>Artist</label>
+          <input type="text" id="f_artist" placeholder="Artist name">
         </div>
-        <button class="modal-close" aria-label="Close">✕</button>
+
+        <div class="field">
+          <label>Spotify URL</label>
+          <input type="text" id="f_spotify"
+                 placeholder="https://open.spotify.com/track/...">
+        </div>
+
+        <div class="field">
+          <label>YouTube URL</label>
+          <input type="text" id="f_yt"
+                 placeholder="https://youtu.be/...">
+        </div>
+
+        <div class="field">
+          <label>Apple Music URL</label>
+          <input type="text" id="f_am"
+                 placeholder="https://music.apple.com/...">
+        </div>
+
+        <div class="field">
+          <label>Personal message</label>
+          <textarea id="f_msg" rows="3"
+                    placeholder="Why this song..."></textarea>
+        </div>
       </div>
-      ${bodyHtml}
-    `;
-    modalBody.querySelector('.modal-close').addEventListener('click', closeModal);
-    modalOverlay.classList.add('open');
-  }
 
-  function openModal(type, editItem){
-    const g = GOODIES.find(x=>x.id===type);
-    ({note:modalNote, photo:modalPhoto, song:modalSong, video:modalVideo, gift:modalGift,
-      voice:modalVoice, drawing:modalDrawing, location:modalLocation, coupon:modalCoupon,
-      memory:modalMemory})[type](g, editItem||null);
-  }
+      <div>
+        <div class="preview-card">
+          <div class="preview-icon-row">
+            <div class="preview-icon-box"
+                 style="background:linear-gradient(135deg,#e0559c,#8b5cf6);color:#fff;">
+              🎵
+            </div>
 
-  // ---------------- NOTE ----------------
-  function modalNote(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Title</label>
-            <input type="text" id="f_title" placeholder="A little note...">
-          </div>
-          <div class="field"><label>Your message</label>
-            <textarea id="f_msg" rows="5" placeholder="Pour your heart out 🤝"></textarea>
-          </div>
-          <div class="field"><label>Font</label>
-            <div class="pill-row" id="fontPills">
-              <button type="button" class="pill active" data-v="Handwritten">Handwritten</button>
-              <button type="button" class="pill" data-v="Rounded">Rounded</button>
+            <div>
+              <div class="preview-title" id="pv_title">
+                Untitled song
+              </div>
+              <div class="preview-sub" id="pv_artist"></div>
             </div>
           </div>
-          <div class="field"><label>Background</label>
-            <div class="swatch-row" id="bgSwatches"></div>
-          </div>
-          <div class="field"><label>Emoji <span class="opt">(optional)</span></label>
-            <div class="emoji-grid" id="emojiGrid"></div>
-          </div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card" id="notePreview" style="background:${NOTE_BG[0]};min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;"></div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    let font=ed.font||'Handwritten', bg=ed.bg||NOTE_BG[0], emoji=ed.emoji||'';
-    const titleI = document.getElementById('f_title');
-    const msgI = document.getElementById('f_msg');
-    const preview = document.getElementById('notePreview');
-    const save = document.getElementById('saveBtn');
-    const bgWrap = document.getElementById('bgSwatches');
-    titleI.value = ed.title||''; msgI.value = ed.msg||'';
-    NOTE_BG.forEach((c,i)=>{
-      const s = document.createElement('div');
-      s.className = 'swatch'+(c===bg?' active':'');
-      s.style.background = c;
-      s.addEventListener('click', ()=>{
-        bgWrap.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
-        s.classList.add('active'); bg=c; renderPreview();
-      });
-      bgWrap.appendChild(s);
-    });
-    const emojiWrap = document.getElementById('emojiGrid');
-    ['💛','❤️','💚','💙','💜','✨','🌸','⭐','😢','😊','🎉','🌷','🍀','🧸','☕','🎁','😘'].forEach(em=>{
-      const b = document.createElement('div');
-      b.className='emoji-opt'+(em===emoji?' active':''); b.textContent=em;
-      b.addEventListener('click', ()=>{
-        emojiWrap.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('active'));
-        if(emoji===em){ emoji=''; } else { emoji=em; b.classList.add('active'); }
-        renderPreview();
-      });
-      emojiWrap.appendChild(b);
-    });
-    document.querySelectorAll('#fontPills .pill').forEach(p=> p.classList.toggle('active', p.dataset.v===font));
-    document.getElementById('fontPills').addEventListener('click', e=>{
-      if(e.target.tagName!=='BUTTON') return;
-      document.querySelectorAll('#fontPills .pill').forEach(p=>p.classList.remove('active'));
-      e.target.classList.add('active'); font = e.target.dataset.v; renderPreview();
-    });
-    function renderPreview(){
-      const fam = font==='Handwritten' ? "'Caveat',cursive" : "'Quicksand',sans-serif";
-      preview.style.background = bg;
-      preview.innerHTML = `<div style="font-family:${fam};font-size:20px;line-height:1.4;">${emoji?emoji+' ':''}${esc(msgI.value) || 'A little note for you...'}</div>`;
-      save.disabled = !msgI.value.trim();
-      titleI.classList.toggle('filled', !!titleI.value.trim());
-      msgI.classList.toggle('filled', !!msgI.value.trim());
-    }
-    titleI.addEventListener('input', renderPreview);
-    msgI.addEventListener('input', renderPreview);
-    renderPreview();
-    save.addEventListener('click', ()=> commitItem('note', {title:titleI.value.trim(), msg:msgI.value.trim(), font, bg, emoji}, msgI.value.trim() || titleI.value.trim(), existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
 
-  // ---------------- PHOTO ----------------
-  function modalPhoto(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Upload photo</label>
-            <label class="file-drop" id="dropZone">⬆ Choose a photo<input type="file" id="fileInput" accept="image/*"></label>
-          </div>
-          <div class="field"><label>Caption</label>
-            <input type="text" id="f_caption" placeholder="A moment to remember">
-          </div>
-          <div class="field"><label>Frame</label>
-            <div class="pill-row" id="framePills">
-              <button type="button" class="pill active" data-v="Polaroid">Polaroid</button>
-              <button type="button" class="pill" data-v="Rounded">Rounded</button>
-              <button type="button" class="pill" data-v="Vintage">Vintage</button>
-              <button type="button" class="pill" data-v="Plain">Plain</button>
+          <div id="songPreviewPlayer" style="margin-top:14px;">
+            <div class="preview-sub">
+              Add a Spotify, YouTube or Apple Music link to play.
             </div>
           </div>
-          <div class="field"><label>Border color</label>
-            <input type="color" class="draw-color" id="borderColor" value="#ffffff">
-          </div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card" id="photoPreview" style="padding:14px;">
-            <div class="preview-placeholder-box" id="photoBox">No photo</div>
-          </div>
+
+          <div class="preview-sub"
+               id="pv_msg"
+               style="margin-top:10px;"></div>
         </div>
       </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    let dataUrl=ed.dataUrl||null, fileName=ed.name||'';
-    const input = document.getElementById('fileInput');
-    const box = document.getElementById('photoBox');
-    const save = document.getElementById('saveBtn');
-    const captionI = document.getElementById('f_caption');
-    captionI.value = ed.caption || '';
-    if(dataUrl){ box.innerHTML = `<img src="${dataUrl}">`; save.disabled=false; captionI.classList.toggle('filled', !!captionI.value.trim()); }
-    input.addEventListener('change', ()=>{
-      const file = input.files[0]; if(!file) return;
-      fileName = file.name;
-      const reader = new FileReader();
-      reader.onload = e=>{ dataUrl=e.target.result; box.innerHTML = `<img src="${dataUrl}">`; save.disabled=false; };
-      reader.readAsDataURL(file);
-    });
-    document.querySelectorAll('#framePills .pill').forEach(p=> p.classList.toggle('active', p.dataset.v===(ed.frame||'Polaroid')));
-    document.getElementById('framePills').addEventListener('click', e=>{
-      if(e.target.tagName!=='BUTTON') return;
-      document.querySelectorAll('#framePills .pill').forEach(p=>p.classList.remove('active'));
-      e.target.classList.add('active');
-    });
-    captionI.addEventListener('input', e=> e.target.classList.toggle('filled', !!e.target.value.trim()));
-    save.addEventListener('click', ()=>{
-      const capt = captionI.value.trim();
-      const frame = document.querySelector('#framePills .pill.active').dataset.v;
-      commitItem('photo', {dataUrl, name:fileName, caption:capt, frame}, capt || fileName || 'Photo attached', existing&&existing.id);
-    });
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
+    </div>
 
-  // ---------------- SONG ----------------
-  function modalSong(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Song Title</label><input type="text" id="f_title" placeholder="Our song"></div>
-          <div class="field"><label>Artist</label><input type="text" id="f_artist" placeholder="Artist name"></div>
-          <div class="field"><label>Spotify URL</label><input type="text" id="f_spotify" placeholder="https://open.spotify.com/track/..."></div>
-          <div class="field"><label>YouTube URL</label><input type="text" id="f_yt" placeholder="https://youtu.be/..."></div>
-          <div class="field"><label>Apple Music URL</label><input type="text" id="f_am" placeholder="https://music.apple.com/..."></div>
-          <div class="field"><label>Personal message</label><textarea id="f_msg" rows="3" placeholder="Why this song..."></textarea></div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card">
-            <div class="preview-icon-row">
-              <div class="preview-icon-box" style="background:linear-gradient(135deg,#e0559c,#8b5cf6);color:#fff;">🎵</div>
-              <div><div class="preview-title" id="pv_title">Untitled song</div></div>
-            </div>
-            <div class="preview-sub" id="pv_sub">Add a Spotify, YouTube or Apple Music link to play.</div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    const titleI = document.getElementById('f_title');
-    const save = document.getElementById('saveBtn');
-    const pvTitle = document.getElementById('pv_title');
-    titleI.value = ed.title||''; document.getElementById('f_artist').value = ed.artist||'';
-    document.getElementById('f_spotify').value = ed.spotify||''; document.getElementById('f_yt').value = ed.youtube||'';
-    document.getElementById('f_am').value = ed.apple||''; document.getElementById('f_msg').value = ed.msg||'';
-    if(ed.title){ pvTitle.textContent = ed.title; titleI.classList.add('filled'); save.disabled=false; }
-    titleI.addEventListener('input', ()=>{
-      titleI.classList.toggle('filled', !!titleI.value.trim());
-      pvTitle.textContent = titleI.value.trim() || 'Untitled song';
-      save.disabled = !titleI.value.trim();
-    });
-    save.addEventListener('click', ()=> commitItem('song', {
-      title:titleI.value.trim(), artist:document.getElementById('f_artist').value.trim(),
-      spotify:document.getElementById('f_spotify').value.trim(), youtube:document.getElementById('f_yt').value.trim(),
-      apple:document.getElementById('f_am').value.trim(), msg:document.getElementById('f_msg').value.trim()
-    }, titleI.value.trim(), existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelBtn">Cancel</button>
+      <button class="btn-primary" id="saveBtn" disabled>
+        ✓ Save to box
+      </button>
+    </div>
+  `);
 
-  // ---------------- VIDEO ----------------
-  function modalVideo(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>YouTube URL</label><input type="text" id="f_yt" placeholder="https://youtu.be/... or https://youtube.com/watch?v="></div>
-          <div class="field"><label>Caption</label><input type="text" id="f_caption" placeholder="Press play 💜"></div>
-          <div class="helper-text">Video uploads are large — for now, paste a YouTube link. Uploaded videos coming soon.</div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card" style="padding:14px;">
-            <div class="preview-placeholder-box" style="background:#1a1414;color:#fff;font-size:34px;">▶</div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    const ytI = document.getElementById('f_yt');
-    const save = document.getElementById('saveBtn');
-    ytI.value = ed.youtube||''; document.getElementById('f_caption').value = ed.caption||'';
-    if(ed.youtube){ ytI.classList.add('filled'); save.disabled=false; }
-    ytI.addEventListener('input', ()=>{ ytI.classList.toggle('filled', !!ytI.value.trim()); save.disabled = !ytI.value.trim(); });
-    save.addEventListener('click', ()=> commitItem('video', {youtube:ytI.value.trim(), caption:document.getElementById('f_caption').value.trim()}, document.getElementById('f_caption').value.trim() || ytI.value.trim(), existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
+  const titleI = document.getElementById('f_title');
+  const artistI = document.getElementById('f_artist');
+  const spotifyI = document.getElementById('f_spotify');
+  const ytI = document.getElementById('f_yt');
+  const appleI = document.getElementById('f_am');
+  const msgI = document.getElementById('f_msg');
 
-  // ---------------- GIFT ----------------
-  function modalGift(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Gift title</label><input type="text" id="f_title" placeholder="Something you'll love"></div>
-          <div class="field"><label>Image</label>
-            <label class="file-drop"><span id="imgLabel">⬆ Choose image</span><input type="file" id="fileInput" accept="image/*"></label>
-          </div>
-          <div class="field"><label>Store link</label><input type="text" id="f_link" placeholder="https://..."></div>
-          <div class="field"><label>Price</label><input type="text" id="f_price" placeholder="$29"></div>
-          <div class="field"><label>Description</label><textarea id="f_desc" rows="3"></textarea></div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card">
-            <div class="preview-icon-row">
-              <div class="preview-icon-box" style="background:#dff3e6;">🎁</div>
-              <div><div class="preview-title" id="pv_title">A little gift</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn">✓ Save to box</button>
-      </div>
-    `);
-    const titleI = document.getElementById('f_title');
-    const pvTitle = document.getElementById('pv_title');
-    let imgData = ed.img || null;
-    titleI.value = ed.title||''; document.getElementById('f_link').value = ed.link||'';
-    document.getElementById('f_price').value = ed.price||''; document.getElementById('f_desc').value = ed.desc||'';
-    if(ed.title){ pvTitle.textContent = ed.title; titleI.classList.add('filled'); }
-    document.getElementById('fileInput').addEventListener('change', function(){
-      const file=this.files[0]; if(!file) return;
-      const reader=new FileReader();
-      reader.onload = e=>{ imgData=e.target.result; document.getElementById('imgLabel').textContent = file.name; };
-      reader.readAsDataURL(file);
-    });
-    titleI.addEventListener('input', ()=>{ titleI.classList.toggle('filled', !!titleI.value.trim()); pvTitle.textContent = titleI.value.trim() || 'A little gift'; });
-    document.getElementById('saveBtn').addEventListener('click', ()=> commitItem('gift', {
-      title:titleI.value.trim(), img:imgData, link:document.getElementById('f_link').value.trim(),
-      price:document.getElementById('f_price').value.trim(), desc:document.getElementById('f_desc').value.trim()
-    }, titleI.value.trim() || 'A little gift', existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
+  const save = document.getElementById('saveBtn');
 
-  // ---------------- VOICE ----------------
-  let mediaRecorder=null, recChunks=[], recStream=null;
-  function modalVoice(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Title</label><input type="text" id="f_title" placeholder="A voice from me"></div>
-          <div class="rec-row">
-            <button class="rec-btn" id="recBtn">🎤 Record</button>
-            <label class="rec-link">⬆ Or upload audio<input type="file" id="audioFile" accept="audio/*" style="display:none;"></label>
-          </div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card">
-            <div class="preview-icon-row">
-              <div class="preview-icon-box" style="background:#f6e2c8;">🎤</div>
-              <div><div class="preview-title">Voice message</div></div>
-            </div>
-            <div class="preview-sub" id="pv_status">No audio recorded.</div>
-            <div id="audioPlayerWrap"></div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    const recBtn = document.getElementById('recBtn');
-    const status = document.getElementById('pv_status');
-    const playerWrap = document.getElementById('audioPlayerWrap');
-    const save = document.getElementById('saveBtn');
-    let audioDataUrl = ed.dataUrl || null, recording=false;
-    document.getElementById('f_title').value = ed.title || '';
-    if(audioDataUrl){
-      playerWrap.innerHTML = `<audio controls src="${audioDataUrl}" style="width:100%;margin-top:8px;"></audio>`;
-      status.textContent = 'Audio ready.'; save.disabled = false;
-      document.getElementById('f_title').classList.add('filled');
-    }
+  const pvTitle = document.getElementById('pv_title');
+  const pvArtist = document.getElementById('pv_artist');
+  const pvMsg = document.getElementById('pv_msg');
+  const player = document.getElementById('songPreviewPlayer');
 
-    function handleBlob(blob){
-      const reader = new FileReader();
-      reader.onload = e=>{
-        audioDataUrl = e.target.result;
-        playerWrap.innerHTML = `<audio controls src="${audioDataUrl}" style="width:100%;margin-top:8px;"></audio>`;
-        status.textContent = 'Audio ready.';
-        save.disabled = false;
-      };
-      reader.readAsDataURL(blob);
-    }
-    recBtn.addEventListener('click', async ()=>{
-      if(!recording){
-        try{ recStream = await navigator.mediaDevices.getUserMedia({audio:true}); }
-        catch(err){ status.textContent = 'Microphone access denied or unavailable.'; return; }
-        recChunks=[];
-        mediaRecorder = new MediaRecorder(recStream);
-        mediaRecorder.ondataavailable = e=> recChunks.push(e.data);
-        mediaRecorder.onstop = ()=> handleBlob(new Blob(recChunks,{type:'audio/webm'}));
-        mediaRecorder.start(); recording=true;
-        recBtn.classList.add('recording'); recBtn.textContent='■ Stop';
-        status.textContent = 'Recording...';
-      } else {
-        stopRecording(false);
-        recBtn.classList.remove('recording'); recBtn.textContent='🎤 Record';
-        recording=false;
-      }
-    });
-    document.getElementById('audioFile').addEventListener('change', function(){
-      const file=this.files[0]; if(file) handleBlob(file);
-    });
-    document.getElementById('f_title').addEventListener('input', e=> e.target.classList.toggle('filled', !!e.target.value.trim()));
-    save.addEventListener('click', ()=> commitItem('voice', {title:document.getElementById('f_title').value.trim(), dataUrl:audioDataUrl}, document.getElementById('f_title').value.trim() || 'Voice message', existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
-  function stopRecording(discard){
-    try{ if(mediaRecorder && mediaRecorder.state!=='inactive') mediaRecorder.stop(); }catch(e){}
-    if(discard && recStream){ recStream.getTracks().forEach(t=>t.stop()); recStream=null; }
-  }
+  // Load existing values
+  titleI.value = ed.title || '';
+  artistI.value = ed.artist || '';
+  spotifyI.value = ed.spotify || '';
+  ytI.value = ed.youtube || '';
+  appleI.value = ed.apple || '';
+  msgI.value = ed.msg || '';
 
-  // ---------------- DRAWING ----------------
-  function modalDrawing(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="field">
-        <div class="draw-toolbar">
-          <input type="color" class="draw-color" id="drawColor" value="#E2427A">
-          <input type="range" class="draw-slider" id="drawSize" min="1" max="20" value="3">
-          <button type="button" class="pill" id="undoBtn">↺ Undo</button>
-          <button type="button" class="pill" id="redoBtn">↷ Redo</button>
-          <button type="button" class="pill" id="clearBtn">⌫ Clear</button>
-        </div>
-        <canvas id="drawpad"></canvas>
-      </div>
-      <div class="modal-cols" style="margin-top:8px;">
-        <div class="field"><label>Caption</label><input type="text" id="f_caption" placeholder="Doodled with love"></div>
-        <div>
-          <div class="preview-label">Saved preview</div>
-          <div class="preview-card" style="padding:10px;">
-            <div class="preview-placeholder-box" id="drawSaved">Not saved yet</div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveDrawBtn">🎨 Save Drawing</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    const canvas = document.getElementById('drawpad');
-    const ctx = canvas.getContext('2d');
-    let history=[], histIdx=-1;
-    function fit(){
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width*devicePixelRatio; canvas.height = rect.height*devicePixelRatio;
-      ctx.scale(devicePixelRatio, devicePixelRatio);
-      ctx.lineCap='round'; ctx.lineJoin='round';
-      ctx.fillStyle='#fff'; ctx.fillRect(0,0,rect.width,rect.height);
-      pushHistory();
-    }
-    function pushHistory(){
-      history = history.slice(0, histIdx+1);
-      history.push(canvas.toDataURL());
-      histIdx = history.length-1;
-    }
-    function restore(idx){
-      const img = new Image();
-      img.onload = ()=>{ const rect=canvas.getBoundingClientRect(); ctx.clearRect(0,0,rect.width,rect.height); ctx.drawImage(img,0,0,rect.width,rect.height); };
-      img.src = history[idx];
-    }
-    requestAnimationFrame(fit);
-    let color = '#E2427A', size=3, drawing=false, lastX=0,lastY=0;
-    document.getElementById('drawColor').addEventListener('input', e=> color=e.target.value);
-    document.getElementById('drawSize').addEventListener('input', e=> size=e.target.value);
-    function pos(e){ const r=canvas.getBoundingClientRect(); const p=e.touches?e.touches[0]:e; return {x:p.clientX-r.left,y:p.clientY-r.top}; }
-    function start(e){ drawing=true; const p=pos(e); lastX=p.x; lastY=p.y; e.preventDefault(); }
-    function move(e){ if(!drawing) return; const p=pos(e); ctx.strokeStyle=color; ctx.lineWidth=size; ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; e.preventDefault(); }
-    function end(){ if(drawing){ drawing=false; pushHistory(); } }
-    canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
-    canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false}); canvas.addEventListener('touchend', end);
-    document.getElementById('undoBtn').addEventListener('click', ()=>{ if(histIdx>0){ histIdx--; restore(histIdx); } });
-    document.getElementById('redoBtn').addEventListener('click', ()=>{ if(histIdx<history.length-1){ histIdx++; restore(histIdx); } });
-    document.getElementById('clearBtn').addEventListener('click', ()=>{ const rect=canvas.getBoundingClientRect(); ctx.fillStyle='#fff'; ctx.fillRect(0,0,rect.width,rect.height); pushHistory(); });
-
-    let savedData = ed.dataUrl || null;
-    const save = document.getElementById('saveBtn');
-    document.getElementById('f_caption').value = ed.caption || '';
-    if(savedData){
-      document.getElementById('drawSaved').innerHTML = `<img src="${savedData}" style="width:100%;height:100%;object-fit:cover;">`;
-      save.disabled = false;
-    }
-    document.getElementById('saveDrawBtn').addEventListener('click', ()=>{
-      savedData = canvas.toDataURL('image/png');
-      document.getElementById('drawSaved').innerHTML = `<img src="${savedData}" style="width:100%;height:100%;object-fit:cover;">`;
-      save.disabled = false;
-      toast('Drawing saved to preview');
-    });
-    save.addEventListener('click', ()=> commitItem('drawing', {dataUrl:savedData, caption:document.getElementById('f_caption').value.trim()}, document.getElementById('f_caption').value.trim() || 'A doodle', existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
-
-  // ---------------- LOCATION ----------------
-  function modalLocation(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Place / Address</label><input type="text" id="f_place" placeholder="Central Park, New York"></div>
-          <div class="field-row">
-            <div class="field"><label>Latitude <span class="opt">optional</span></label><input type="text" id="f_lat"></div>
-            <div class="field"><label>Longitude <span class="opt">optional</span></label><input type="text" id="f_lng"></div>
-          </div>
-          <div class="field"><label>Personal note</label><textarea id="f_note" rows="3" placeholder="Why this place matters..."></textarea></div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:700;font-size:15px;">📍 <span id="pv_place">Somewhere special</span></div>
-            <div class="preview-placeholder-box" style="background:#E4F5FB;height:110px;"></div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    const placeI = document.getElementById('f_place');
-    const save = document.getElementById('saveBtn');
-    placeI.value = ed.place||''; document.getElementById('f_lat').value = ed.lat||'';
-    document.getElementById('f_lng').value = ed.lng||''; document.getElementById('f_note').value = ed.note||'';
-    if(ed.place){ placeI.classList.add('filled'); document.getElementById('pv_place').textContent = ed.place; save.disabled=false; }
-    placeI.addEventListener('input', ()=>{
-      placeI.classList.toggle('filled', !!placeI.value.trim());
-      document.getElementById('pv_place').textContent = placeI.value.trim() || 'Somewhere special';
-      save.disabled = !placeI.value.trim();
-    });
-    save.addEventListener('click', ()=> commitItem('location', {
-      place:placeI.value.trim(), lat:document.getElementById('f_lat').value.trim(),
-      lng:document.getElementById('f_lng').value.trim(), note:document.getElementById('f_note').value.trim()
-    }, placeI.value.trim(), existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
-
-  // ---------------- COUPON ----------------
-  function modalCoupon(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Coupon title</label><input type="text" id="f_title" placeholder="Movie Night"></div>
-          <div class="field"><div class="pill-row" id="quickPills">${COUPON_QUICK.map(q=>`<button type="button" class="pill" data-v="${q}">${q}</button>`).join('')}</div></div>
-          <div class="field"><label>Description</label><textarea id="f_desc" rows="2" placeholder="Redeem for a cozy night in..."></textarea></div>
-          <div class="field-row">
-            <div class="field"><label>Expiry</label><input type="date" id="f_expiry"></div>
-            <div class="field"><label>Code</label><input type="text" id="f_code" placeholder="LOVE2025"></div>
-          </div>
-          <div class="field"><label>Theme</label>
-            <div class="pill-row" id="themePills">${Object.keys(THEME_GRAD).map((t,i)=>`<button type="button" class="pill${i===0?' active':''}" data-v="${t}">${t}</button>`).join('')}</div>
-          </div>
-          <div class="field"><label>Icon</label>
-            <div class="emoji-grid" id="iconGrid"></div>
-          </div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card" id="couponPreview" style="background:linear-gradient(135deg,${THEME_GRAD.Rose[0]},${THEME_GRAD.Rose[1]});color:#fff;position:relative;overflow:hidden;">
-            <div style="display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.08em;opacity:.9;"><span id="pv_icon">🎟</span> COUPON</div>
-            <div id="pv_title" style="font-family:'Caveat',cursive;font-size:1.7rem;font-weight:700;margin-top:6px;">Untitled Coupon</div>
-            <div style="border-top:1.5px dashed rgba(255,255,255,0.5);margin:12px 0;"></div>
-            <div id="pv_desc" style="font-size:13.5px;opacity:.95;">A little something just for you.</div>
-            <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-              <span style="background:rgba(255,255,255,0.25);padding:8px 18px;border-radius:999px;font-size:13px;font-weight:700;">🎟 Redeem</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    let theme=ed.theme||'Rose', icon=ed.icon||'🎟';
-    const titleI = document.getElementById('f_title');
-    const descI = document.getElementById('f_desc');
-    const preview = document.getElementById('couponPreview');
-    const save = document.getElementById('saveBtn');
-    const iconGrid = document.getElementById('iconGrid');
-    titleI.value = ed.title||''; descI.value = ed.desc||'';
-    document.getElementById('f_expiry').value = ed.expiry||''; document.getElementById('f_code').value = ed.code||'';
-    document.getElementById('pv_icon').textContent = icon;
-    document.getElementById('pv_title').textContent = ed.title || 'Untitled Coupon';
-    document.getElementById('pv_desc').textContent = ed.desc || 'A little something just for you.';
-    preview.style.background = `linear-gradient(135deg,${THEME_GRAD[theme][0]},${THEME_GRAD[theme][1]})`;
-    if(ed.title){ titleI.classList.add('filled'); save.disabled=false; }
-    COUPON_ICONS.forEach((ic,i)=>{
-      const b=document.createElement('div'); b.className='emoji-opt'+(ic===icon?' active':''); b.textContent=ic;
-      b.addEventListener('click', ()=>{
-        iconGrid.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('active'));
-        b.classList.add('active'); icon=ic; document.getElementById('pv_icon').textContent = icon;
-      });
-      iconGrid.appendChild(b);
-    });
-    document.querySelectorAll('#themePills .pill').forEach(p=> p.classList.toggle('active', p.dataset.v===theme));
-    document.getElementById('quickPills').addEventListener('click', e=>{
-      if(e.target.tagName!=='BUTTON') return;
-      titleI.value = e.target.dataset.v; titleI.dispatchEvent(new Event('input'));
-    });
-    document.getElementById('themePills').addEventListener('click', e=>{
-      if(e.target.tagName!=='BUTTON') return;
-      document.querySelectorAll('#themePills .pill').forEach(p=>p.classList.remove('active'));
-      e.target.classList.add('active'); theme = e.target.dataset.v;
-      const grad = THEME_GRAD[theme];
-      preview.style.background = `linear-gradient(135deg,${grad[0]},${grad[1]})`;
-    });
-    titleI.addEventListener('input', ()=>{
-      titleI.classList.toggle('filled', !!titleI.value.trim());
-      document.getElementById('pv_title').textContent = titleI.value.trim() || 'Untitled Coupon';
-      save.disabled = !titleI.value.trim();
-    });
-    descI.addEventListener('input', ()=> document.getElementById('pv_desc').textContent = descI.value.trim() || 'A little something just for you.');
-    save.addEventListener('click', ()=> commitItem('coupon', {
-      title:titleI.value.trim(), desc:descI.value.trim(), expiry:document.getElementById('f_expiry').value,
-      code:document.getElementById('f_code').value.trim(), theme, icon
-    }, titleI.value.trim(), existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
-
-  // ---------------- MEMORY ----------------
-  function modalMemory(g, existing){
-    const ed = existing ? existing.data : {};
-    shell(g, `
-      <div class="modal-cols">
-        <div>
-          <div class="field"><label>Title</label><input type="text" id="f_title" placeholder="Our first road trip"></div>
-          <div class="field"><label>Date</label><input type="date" id="f_date"></div>
-          <div class="field"><label>Description</label><textarea id="f_desc" rows="3" placeholder="What happened..."></textarea></div>
-          <div class="field"><label>Photo</label>
-            <label class="file-drop"><span id="imgLabel">⬆ Choose image</span><input type="file" id="fileInput" accept="image/*"></label>
-          </div>
-          <div class="field"><label>Location</label><input type="text" id="f_loc" placeholder="Big Sur, CA"></div>
-          <div class="field"><label>Tags <span class="opt">(comma separated)</span></label><input type="text" id="f_tags" placeholder="roadtrip, sunset"></div>
-        </div>
-        <div>
-          <div class="preview-label">Preview</div>
-          <div class="preview-card" style="border-left:4px solid var(--gold);">
-            <div style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-bottom:6px;">📅 <span id="pv_date">—</span></div>
-            <div class="preview-title" id="pv_title">A memory</div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn-primary" id="saveBtn" disabled>✓ Save to box</button>
-      </div>
-    `);
-    const titleI = document.getElementById('f_title');
-    const dateI = document.getElementById('f_date');
-    const save = document.getElementById('saveBtn');
-    let imgData = ed.img || null;
-    titleI.value = ed.title||''; dateI.value = ed.date||'';
-    document.getElementById('f_desc').value = ed.desc||''; document.getElementById('f_loc').value = ed.loc||'';
-    document.getElementById('f_tags').value = ed.tags||'';
-    if(ed.title){ titleI.classList.add('filled'); save.disabled=false; document.getElementById('pv_title').textContent = ed.title; }
-    if(ed.date) document.getElementById('pv_date').textContent = ed.date;
-    document.getElementById('fileInput').addEventListener('change', function(){
-      const file=this.files[0]; if(!file) return;
-      const reader=new FileReader();
-      reader.onload = e=>{ imgData=e.target.result; document.getElementById('imgLabel').textContent=file.name; };
-      reader.readAsDataURL(file);
-    });
-    titleI.addEventListener('input', ()=>{
-      titleI.classList.toggle('filled', !!titleI.value.trim());
-      document.getElementById('pv_title').textContent = titleI.value.trim() || 'A memory';
-      save.disabled = !titleI.value.trim();
-    });
-    dateI.addEventListener('input', ()=> document.getElementById('pv_date').textContent = dateI.value || '—');
-    save.addEventListener('click', ()=> commitItem('memory', {
-      title:titleI.value.trim(), date:dateI.value, desc:document.getElementById('f_desc').value.trim(),
-      img:imgData, loc:document.getElementById('f_loc').value.trim(),
-      tags:document.getElementById('f_tags').value.trim()
-    }, titleI.value.trim(), existing&&existing.id));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  }
-
-  // =====================================================================
-  // VIEW NAVIGATION: build -> review -> share -> reveal (recipient side)
-  // =====================================================================
-  const buildView = document.getElementById('buildView');
-  const reviewView = document.getElementById('reviewView');
-  const shareView = document.getElementById('shareView');
-  const revealView = document.getElementById('revealView');
-  const allViews = [buildView, reviewView, shareView, revealView];
-  function showView(v){
-    allViews.forEach(x=> x.style.display = (x===v ? '' : 'none'));
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  continueBtn.addEventListener('click', ()=>{
-    if(continueBtn.disabled) return;
-    renderReviewList();
-    showView(reviewView);
-  });
-  document.getElementById('backToBuildBtn').addEventListener('click', ()=> showView(buildView));
-
-  // ---- Review list: reorder, edit, delete ----
-  function renderReviewList(){
-    const list = document.getElementById('reviewList');
-    list.innerHTML = '';
-    if(state.items.length === 0){
-      list.innerHTML = `<div class="ri-empty">No goodies yet — go back and add some.</div>`;
-      return;
-    }
-    state.items.forEach((item, idx)=>{
-      const g = GOODIES.find(x=>x.id===item.type);
-      const row = document.createElement('div');
-      row.className = 'review-item';
-      row.innerHTML = `
-        <div class="review-item-head">
-          <div class="reorder-btns">
-            <button class="up-btn" ${idx===0?'disabled':''} aria-label="Move up">▲</button>
-            <button class="down-btn" ${idx===state.items.length-1?'disabled':''} aria-label="Move down">▼</button>
-          </div>
-          <span class="ri-emoji">${g.emoji}</span>
-          <span class="ri-name">${g.name}</span>
-          <button class="icon-btn edit-btn" title="Edit" aria-label="Edit ${g.name}">✏️</button>
-          <button class="icon-btn delete-btn" title="Delete" aria-label="Delete ${g.name}">🗑️</button>
-        </div>
-        <div class="review-item-body">${renderItemContent(item)}</div>
-      `;
-      row.querySelector('.up-btn').addEventListener('click', ()=>{
-        if(idx===0) return;
-        [state.items[idx-1], state.items[idx]] = [state.items[idx], state.items[idx-1]];
-        save(); renderReviewList();
-      });
-      row.querySelector('.down-btn').addEventListener('click', ()=>{
-        if(idx===state.items.length-1) return;
-        [state.items[idx+1], state.items[idx]] = [state.items[idx], state.items[idx+1]];
-        save(); renderReviewList();
-      });
-      row.querySelector('.edit-btn').addEventListener('click', ()=> openModal(item.type, item));
-      row.querySelector('.delete-btn').addEventListener('click', ()=>{
-        state.items = state.items.filter(x=>x.id!==item.id);
-        save(); renderReviewList(); renderAll();
-        toast(`${g.name} removed`);
-      });
-      list.appendChild(row);
-    });
-  }
-
-  // ---- Wrap up & share ----
-  // Portable share links. The gift is compressed and stored in the URL hash,
-  // so it works on another device without relying on localStorage.
-
-  function bytesToBase64Url(bytes){
-    let binary = '';
-    const chunkSize = 0x8000;
-    for(let i = 0; i < bytes.length; i += chunkSize){
-      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-    }
-    return btoa(binary)
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/g, '');
-  }
-
-  function base64UrlToBytes(value){
-    let base64 = value.replace(/-/g, '+').replace(/_/g, '/');
-    while(base64.length % 4) base64 += '=';
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes;
-  }
-
-  async function encodeGift(gift){
-    const json = JSON.stringify(gift);
-    const input = new TextEncoder().encode(json);
-
-    // Compress when the browser supports CompressionStream.
-    if('CompressionStream' in window){
-      const stream = new Blob([input]).stream().pipeThrough(new CompressionStream('gzip'));
-      const compressed = new Uint8Array(await new Response(stream).arrayBuffer());
-      return 'g1.' + bytesToBase64Url(compressed);
-    }
-
-    // Fallback for older browsers.
-    return 'p1.' + bytesToBase64Url(input);
-  }
-
-  async function decodeGift(encoded){
+  function spotifyEmbed(url){
     try{
-      if(!encoded) return null;
+      const match = url.match(
+        /open\.spotify\.com\/track\/([A-Za-z0-9]+)/
+      );
 
-      const dot = encoded.indexOf('.');
-      if(dot === -1) return null;
+      if(!match) return null;
 
-      const version = encoded.slice(0, dot);
-      const payload = encoded.slice(dot + 1);
-      if(!payload) return null;
-
-      const bytes = base64UrlToBytes(payload);
-      let json;
-
-      if(version === 'g1'){
-        if(!('DecompressionStream' in window)) return null;
-        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-        const decompressed = new Uint8Array(await new Response(stream).arrayBuffer());
-        json = new TextDecoder().decode(decompressed);
-      }else if(version === 'p1'){
-        json = new TextDecoder().decode(bytes);
-      }else{
-        return null;
-      }
-
-      const gift = JSON.parse(json);
-      if(!gift || typeof gift !== 'object' || !Array.isArray(gift.items)) return null;
-      return gift;
-    }catch(error){
-      console.error('Could not decode gift link:', error);
+      return `
+        <iframe
+          src="https://open.spotify.com/embed/track/${match[1]}"
+          width="100%"
+          height="152"
+          frameborder="0"
+          allowtransparency="true"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+          style="border-radius:12px;border:0;">
+        </iframe>
+      `;
+    }catch(e){
       return null;
     }
   }
 
-  document.getElementById('wrapUpBtn').addEventListener('click', async ()=>{
-    if(state.items.length === 0){
-      toast('Add at least one goodie first');
-      return;
-    }
-
-    const button = document.getElementById('wrapUpBtn');
-    button.disabled = true;
-    button.textContent = 'Creating link…';
-
+  function youtubeEmbed(url){
     try{
-      const encodedGift = await encodeGift(state);
-      const link = location.origin + location.pathname + '#/gift/' + encodedGift;
+      let videoId = null;
 
-      document.getElementById('shareLinkInput').value = link;
-      document.getElementById('shareSub').textContent =
-        `Send this link to ${state.for || 'them'}. They'll open every goodie, one by one.`;
+      const normal = url.match(
+        /youtube\.com\/watch\?v=([^&]+)/
+      );
 
-      showView(shareView);
-    }catch(error){
-      console.error(error);
-      toast('Could not create the gift link. Try again.');
-    }finally{
-      button.disabled = false;
-      button.innerHTML = 'Wrap up &amp; share <span style="font-size:15px;">🔗</span>';
+      const short = url.match(
+        /youtu\.be\/([^?&]+)/
+      );
+
+      const shorts = url.match(
+        /youtube\.com\/shorts\/([^?&]+)/
+      );
+
+      if(normal) videoId = normal[1];
+      else if(short) videoId = short[1];
+      else if(shorts) videoId = shorts[1];
+
+      if(!videoId) return null;
+
+      return `
+        <iframe
+          width="100%"
+          height="180"
+          src="https://www.youtube.com/embed/${videoId}"
+          title="YouTube video"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+          style="border-radius:12px;">
+        </iframe>
+      `;
+    }catch(e){
+      return null;
     }
-  });
-
-  document.getElementById('copyLinkBtn').addEventListener('click', ()=>{
-    const input = document.getElementById('shareLinkInput');
-    input.select(); input.setSelectionRange(0, 99999);
-    (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.resolve().then(()=>document.execCommand('copy')))
-      .then(()=> toast('Link copied ✓'))
-      .catch(()=> toast('Link copied ✓'));
-  });
-
-  document.getElementById('previewRevealBtn').addEventListener('click', ()=>{
-    loadReveal(state);
-    showView(revealView);
-  });
-
-  document.getElementById('startAnotherBtn').addEventListener('click', ()=>{
-    state = {for:'', from:'', items: []};
-    save();
-    forInput.value=''; fromInput.value='';
-    renderAll();
-    showView(buildView);
-  });
-
-  // ---- Reveal (recipient) view ----
-  let revealState = null, revealIdx = 0;
-  function loadReveal(s){
-    revealState = s; revealIdx = 0;
-    document.getElementById('revealFor').textContent = s.for || 'You';
-    document.getElementById('revealFrom').textContent = s.from || 'A secret admirer';
-    document.getElementById('goodieCountHint').textContent = `${s.items.length} ${s.items.length===1?'goodie':'goodies'} inside`;
-    document.getElementById('revealIntro').style.display = '';
-    document.getElementById('revealCarousel').style.display = 'none';
-    document.getElementById('revealDone').style.display = 'none';
-    document.getElementById('giftboxScene').classList.remove('unwrapping');
   }
 
-  function showGoodie(){
-    const item = revealState.items[revealIdx];
-    const g = GOODIES.find(x=>x.id===item.type);
-    document.getElementById('carouselCounter').textContent = `${revealIdx+1} / ${revealState.items.length}`;
-    document.getElementById('carouselCard').innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <span style="font-size:24px;">${g.emoji}</span><span style="font-weight:700;font-size:16px;">${g.name}</span>
-      </div>
-      ${renderItemContent(item)}
-    `;
-    document.getElementById('prevGoodieBtn').disabled = revealIdx===0;
-    document.getElementById('nextGoodieBtn').textContent = revealIdx===revealState.items.length-1 ? 'Finish ✓' : 'Next →';
-  }
+  function updateSongPreview(){
+    const title = titleI.value.trim();
+    const artist = artistI.value.trim();
+    const spotify = spotifyI.value.trim();
+    const youtube = ytI.value.trim();
+    const apple = appleI.value.trim();
+    const msg = msgI.value.trim();
 
-  function unwrap(){
-    if(!revealState || revealState.items.length===0){ toast('This box is empty'); return; }
-    const scene = document.getElementById('giftboxScene');
-    scene.classList.add('unwrapping');
-    throwHearts(scene);
-    setTimeout(()=>{
-      document.getElementById('revealIntro').style.display = 'none';
-      document.getElementById('revealCarousel').style.display = '';
-      showGoodie();
-    }, 420);
-  }
-  document.getElementById('unwrapBtn').addEventListener('click', unwrap);
-  document.getElementById('giftboxScene').addEventListener('click', unwrap);
+    pvTitle.textContent = title || 'Untitled song';
+    pvArtist.textContent = artist;
+    pvMsg.textContent = msg;
 
-  document.getElementById('nextGoodieBtn').addEventListener('click', ()=>{
-    if(revealIdx < revealState.items.length-1){ revealIdx++; showGoodie(); }
-    else {
-      document.getElementById('revealCarousel').style.display = 'none';
-      document.getElementById('revealDone').style.display = '';
-      throwConfetti();
-    }
-  });
-  document.getElementById('prevGoodieBtn').addEventListener('click', ()=>{
-    if(revealIdx>0){ revealIdx--; showGoodie(); }
-  });
+    let embed = null;
 
-  // ---- Hash routing: open a portable gift link ----
-  async function checkHashRoute(){
-    const prefix = '#/gift/';
-    if(!location.hash.startsWith(prefix)) return false;
-
-    const encodedGift = location.hash.slice(prefix.length);
-    if(!encodedGift){
-      toast('This gift link is incomplete.');
-      return false;
+    // Spotify first
+    if(spotify){
+      embed = spotifyEmbed(spotify);
     }
 
-    const gift = await decodeGift(encodedGift);
-    if(gift){
-      loadReveal(gift);
-      showView(revealView);
-      return true;
+    // Then YouTube
+    if(!embed && youtube){
+      embed = youtubeEmbed(youtube);
     }
 
-    toast('This gift link is invalid or incomplete.');
-    return false;
-  }
-  window.addEventListener('hashchange', checkHashRoute);
+    if(embed){
+      player.innerHTML = embed;
+    }
+    else if(apple){
+      player.innerHTML = `
+        <a href="${esc(apple)}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn-secondary"
+           style="display:inline-block;text-decoration:none;">
+          🎵 Open in Apple Music
+        </a>
+      `;
+    }
+    else{
+      player.innerHTML = `
+        <div class="preview-sub">
+          Add a Spotify, YouTube or Apple Music link to play.
+        </div>
+      `;
+    }
 
-  renderAll();
-  checkHashRoute().then(opened => {
-    if(!opened) showView(buildView);
+    save.disabled = !title;
+  }
+
+  [
+    titleI,
+    artistI,
+    spotifyI,
+    ytI,
+    appleI,
+    msgI
+  ].forEach(input=>{
+    input.addEventListener('input', updateSongPreview);
   });
-})();
-</script>
-</body>
-</html>
+
+  updateSongPreview();
+
+  save.addEventListener('click', ()=>{
+    commitItem(
+      'song',
+      {
+        title: titleI.value.trim(),
+        artist: artistI.value.trim(),
+        spotify: spotifyI.value.trim(),
+        youtube: ytI.value.trim(),
+        apple: appleI.value.trim(),
+        msg: msgI.value.trim()
+      },
+      titleI.value.trim(),
+      existing && existing.id
+    );
+  });
+
+  document
+    .getElementById('cancelBtn')
+    .addEventListener('click', closeModal);
+}
